@@ -1,0 +1,91 @@
+from dataclasses import dataclass
+from unittest import TestCase
+
+from dataclasses_serialization.json import JSONSerializer, JSONSerializerMixin, JSONStrSerializer, JSONStrSerializerMixin
+
+
+@dataclass
+class Person:
+    name: str
+
+
+@dataclass
+class Song:
+    artist: Person
+
+
+class TestJSON(TestCase):
+    def test_json_serialization_basic(self):
+        obj = Person("Fred")
+        serialized_obj = {'name': "Fred"}
+
+        with self.subTest("Serialize dataclass -> JSON"):
+            self.assertEqual(serialized_obj, JSONSerializer.serialize(obj))
+
+        with self.subTest("Deserialize JSON -> dataclass"):
+            self.assertEqual(obj, JSONSerializer.deserialize(Person, serialized_obj))
+
+    def test_json_serialization_types(self):
+        test_cases = [
+            (int, 1, 1),
+            (float, 1.0, 1.0),
+            (str, "Fred", "Fred"),
+            (bool, True, True),
+            (list, [], []),
+            (type(None), None, None)
+        ]
+
+        for type_, obj, serialized_obj in test_cases:
+            with self.subTest("Serialize object", obj=obj):
+                self.assertEqual(serialized_obj, JSONSerializer.serialize(obj))
+
+            with self.subTest("Deserialize object", obj=obj):
+                self.assertEqual(obj, JSONSerializer.deserialize(type_, serialized_obj))
+
+    def test_json_serialization_nested(self):
+        obj = Song(Person("Fred"))
+        serialized_obj = {'artist': {'name': "Fred"}}
+
+        with self.subTest("Serialize nested dataclass -> JSON"):
+            self.assertEqual(serialized_obj, JSONSerializer.serialize(obj))
+
+        with self.subTest("Deserialize JSON -> nested dataclass"):
+            self.assertEqual(obj, JSONSerializer.deserialize(Song, serialized_obj))
+
+    def test_json_serializer_mixin(self):
+        @dataclass
+        class Artist(JSONSerializerMixin):
+            name: str
+
+        obj = Artist("Fred")
+        serialized_obj = {'name': "Fred"}
+
+        with self.subTest("Serialize dataclass -> JSON with as_json mixin"):
+            self.assertEqual(serialized_obj, obj.as_json())
+
+        with self.subTest("Deserialize JSON -> dataclass with from_json mixin"):
+            self.assertEqual(obj, Artist.from_json(serialized_obj))
+
+    def test_json_str_serialization(self):
+        obj = Person("Fred")
+        serialized_obj = '{"name": "Fred"}'
+
+        with self.subTest("Serialize dataclass -> JSON string"):
+            self.assertEqual(serialized_obj, JSONStrSerializer.serialize(obj))
+
+        with self.subTest("Deserialize JSON string -> dataclass"):
+            self.assertEqual(obj, JSONStrSerializer.deserialize(Person, serialized_obj))
+
+    def test_json_str_serializer_mixin(self):
+        @dataclass
+        class Artist(JSONStrSerializerMixin):
+            name: str
+
+        obj = Artist("Fred")
+        serialized_obj = '{"name": "Fred"}'
+
+        with self.subTest("Serialize dataclass -> JSON string with as_json_str mixin"):
+            self.assertEqual(serialized_obj, obj.as_json_str())
+
+        with self.subTest("Deserialize JSON string -> dataclass with from_json_str mixin"):
+            self.assertEqual(obj, Artist.from_json_str(serialized_obj))
