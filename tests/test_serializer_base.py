@@ -2,7 +2,7 @@ from dataclasses import dataclass, asdict
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
-    isinstance,
+    isinstance, issubclass,
     noop_serialization, noop_deserialization,
     dict_to_dataclass,
     Serializer,
@@ -37,6 +37,34 @@ class TestSerializerBase(TestCase):
         for obj, type_ in negative_test_cases:
             with self.subTest(obj=obj, type_=type_):
                 self.assertFalse(isinstance(obj, type_))
+
+    def test_issubclass(self):
+        @dataclass
+        class ExampleDataclass:
+            int_field: int
+
+        @dataclass
+        class AnotherDataclass(ExampleDataclass):
+            str_field: str
+
+        positive_test_cases = [
+            (int, object),
+            (AnotherDataclass, ExampleDataclass)
+        ]
+
+        for cls, supercls in positive_test_cases:
+            with self.subTest(cls=cls, supercls=supercls):
+                self.assertTrue(issubclass(cls, supercls))
+
+        negative_test_cases = [
+            (int, str),
+            (int, dataclass),
+            (ExampleDataclass, dataclass)
+        ]
+
+        for cls, supercls in negative_test_cases:
+            with self.subTest(cls=cls, supercls=supercls):
+                self.assertFalse(issubclass(cls, supercls))
 
     def test_noop_serialization(self):
         obj = object()

@@ -2,6 +2,7 @@ from dataclasses import dataclass, fields, is_dataclass
 
 __all__ = [
     "isinstance",
+    "issubclass",
     "noop_serialization",
     "noop_deserialization",
     "dict_to_dataclass",
@@ -11,6 +12,7 @@ __all__ = [
 ]
 
 original_isinstance = isinstance
+original_issubclass = issubclass
 
 
 def isinstance(o, t):
@@ -18,6 +20,13 @@ def isinstance(o, t):
         return original_isinstance(o, type) and is_dataclass(o)
 
     return original_isinstance(o, t)
+
+
+def issubclass(cls, classinfo):
+    if classinfo is dataclass:
+        return False
+
+    return original_issubclass(cls, classinfo)
 
 
 def noop_serialization(obj):
@@ -68,9 +77,6 @@ class Serializer:
         """
 
         for type_, func in self.deserialization_functions.items():
-            if type_ is dataclass:
-                continue
-
             if issubclass(cls, type_):
                 return func(cls, serialized_obj)
 
