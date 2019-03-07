@@ -1,4 +1,5 @@
 from dataclasses import dataclass, fields, is_dataclass
+from typing import Union
 
 __all__ = [
     "isinstance",
@@ -26,6 +27,9 @@ def issubclass(cls, classinfo):
     if classinfo is dataclass:
         return False
 
+    if classinfo is Union or original_isinstance(cls, type(Union)):
+        return classinfo is Union and original_isinstance(cls, type(Union))
+
     return original_issubclass(cls, classinfo)
 
 
@@ -52,10 +56,27 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
     })
 
 
+def union_deserialization(type_, obj, deserialization_func=noop_deserialization):
+    for arg in type_.__args__:
+        try:
+            return deserialization_func(arg, obj)
+        except DeserializationError:
+            pass
+
+    raise DeserializationError("Cannot deserialize {} {!r} to type {}".format(
+        type(obj).__name__,
+        obj,
+        type_
+    ))
+
+
 @dataclass
 class Serializer:
     serialization_functions: dict
     deserialization_functions: dict
+
+    def __post_init__(self):
+        self.deserialization_functions.setdefault(Union, union_deserialization)
 
     def serialize(self, obj):
         """

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from typing import Union, Optional
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
@@ -49,7 +50,8 @@ class TestSerializerBase(TestCase):
 
         positive_test_cases = [
             (int, object),
-            (AnotherDataclass, ExampleDataclass)
+            (AnotherDataclass, ExampleDataclass),
+            (Union[str, int], Union)
         ]
 
         for cls, supercls in positive_test_cases:
@@ -59,7 +61,8 @@ class TestSerializerBase(TestCase):
         negative_test_cases = [
             (int, str),
             (int, dataclass),
-            (ExampleDataclass, dataclass)
+            (ExampleDataclass, dataclass),
+            (Union, Union[str, int])
         ]
 
         for cls, supercls in negative_test_cases:
@@ -169,3 +172,41 @@ class TestSerializerBase(TestCase):
 
         with self.subTest("Deserialize unknown dataclass"):
             self.assertEqual(AnotherDataclass("Hello, world"), dataclass_serializer.deserialize(AnotherDataclass, {'str_field': "Hello, world"}))
+
+    def test_serializer_union_deserialization_basic(self):
+        serializer = Serializer({}, {(str, int): noop_deserialization})
+
+        with self.subTest("Deserialize str as part of union"):
+            self.assertEqual("Hello, world", serializer.deserialize(Union[str, int], "Hello, world"))
+
+        with self.subTest("Deserialize int as part of union"):
+            self.assertEqual(1, serializer.deserialize(Union[str, int], 1))
+
+        with self.subTest("Fail invalid union deserialization"), self.assertRaises(DeserializationError):
+            serializer.deserialize(Union[str, int], None)
+
+    def test_serializer_union_deserialization_custom(self):
+        serializer = Serializer({}, {
+            (str, int): noop_deserialization,
+            Union: lambda cls, obj: (type(obj), obj)
+        })
+
+        with self.subTest("Deserialize int"):
+            self.assertEqual(1, serializer.deserialize(int, 1))
+
+        with self.subTest("Deserialize custom union"):
+            self.assertEqual((int, 1), serializer.deserialize(Union[str, int], 1))
+
+    def test_serializer_optional_deserialization(self):
+        serializer = Serializer({}, {
+            (int, type(None)): noop_deserialization
+        })
+
+        with self.subTest("Deserialize present optional"):
+            self.assertEqual(1, serializer.deserialize(Optional[int], 1))
+
+        with self.subTest("Deserialize non-present optional"):
+            self.assertEqual(None, serializer.deserialize(Optional[int], None))
+
+        with self.subTest("Fail non-present non-optional deserialization"), self.assertRaises(DeserializationError):
+            serializer.deserialize(int, None)
