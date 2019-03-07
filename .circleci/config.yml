@@ -1,16 +1,23 @@
 version: 2
 jobs:
-  build:
+  test-minimal: &test-minimal
     docker:
       - image: circleci/python:3.6.2
+
+    environment:
+      OPTIONAL_MODULES: ""
 
     steps:
       - checkout
 
+      - run:
+          name: Add optional modules to requirements.txt
+          command: |
+            echo "$OPTIONAL_MODULES" >> requirements.txt
+
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "requirements.txt" }}
-            - v1-dependencies-
 
       - run:
           name: install dependencies
@@ -29,3 +36,23 @@ jobs:
           command: |
             . venv/bin/activate
             python -m unittest discover
+
+  test-py-bson:
+    <<: *test-minimal
+
+    environment:
+      OPTIONAL_MODULES: bson
+
+  test-pymongo-bson:
+    <<: *test-minimal
+
+    environment:
+      OPTIONAL_MODULES: pymongo
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test-minimal
+      - test-py-bson
+      - test-pymongo-bson

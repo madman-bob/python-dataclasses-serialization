@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from os import environ
 from unittest import TestCase, skipIf
 
 try:
@@ -13,6 +14,12 @@ try:
     from dataclasses_serialization.bson import BSONSerializer, BSONSerializerMixin, BSONStrSerializer, BSONStrSerializerMixin
 except ImportError:
     BSONSerializer, BSONSerializerMixin, BSONStrSerializer, BSONStrSerializerMixin = [None] * 4
+
+if 'OPTIONAL_MODULES' in environ:
+    bson_installed = (
+        'bson' in environ['OPTIONAL_MODULES'] or
+        'pymongo' in environ['OPTIONAL_MODULES']
+    )
 
 
 @dataclass
