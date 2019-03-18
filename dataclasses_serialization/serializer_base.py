@@ -1,6 +1,8 @@
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Union
 
+from toolz import curry
+
 __all__ = [
     "isinstance",
     "issubclass",
@@ -37,6 +39,7 @@ def noop_serialization(obj):
     return obj
 
 
+@curry
 def noop_deserialization(cls, obj):
     if not isinstance(obj, cls):
         raise DeserializationError("Cannot deserialize {} {!r} to type {}".format(
@@ -48,6 +51,7 @@ def noop_deserialization(cls, obj):
     return obj
 
 
+@curry
 def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
     return cls(**{
         fld.name: deserialization_func(fld.type, dct[fld.name])
@@ -56,6 +60,7 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
     })
 
 
+@curry
 def union_deserialization(type_, obj, deserialization_func=noop_deserialization):
     for arg in type_.__args__:
         try:
@@ -92,6 +97,7 @@ class Serializer:
 
         raise SerializationError("Cannot serialize type {}".format(type(obj).__name__))
 
+    @curry
     def deserialize(self, cls, serialized_obj):
         """
         Attempt to deserialize serialized object as given type
