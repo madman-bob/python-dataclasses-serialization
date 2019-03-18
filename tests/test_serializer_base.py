@@ -174,7 +174,7 @@ class TestSerializerBase(TestCase):
             self.assertEqual(AnotherDataclass("Hello, world"), dataclass_serializer.deserialize(AnotherDataclass, {'str_field': "Hello, world"}))
 
     def test_serializer_union_deserialization_basic(self):
-        serializer = Serializer({}, {(str, int): noop_deserialization, dataclass: dict_to_dataclass})
+        serializer = Serializer({}, {(str, int): noop_deserialization})
 
         with self.subTest("Deserialize str as part of union"):
             self.assertEqual("Hello, world", serializer.deserialize(Union[str, int], "Hello, world"))

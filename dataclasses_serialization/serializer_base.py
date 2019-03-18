@@ -81,6 +81,7 @@ class Serializer:
     deserialization_functions: dict
 
     def __post_init__(self):
+        self.deserialization_functions.setdefault(dataclass, dict_to_dataclass(deserialization_func=self.deserialize))
         self.deserialization_functions.setdefault(Union, union_deserialization(deserialization_func=self.deserialize))
 
     def serialize(self, obj):

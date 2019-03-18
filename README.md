@@ -47,7 +47,7 @@ To create a custom serializer, create an instance of `dataclasses_serialization.
 
 ```python
 from dataclasses import dataclass, asdict
-from dataclasses_serialization.serializer_base import Serializer, noop_serialization, noop_deserialization, dict_to_dataclass
+from dataclasses_serialization.serializer_base import Serializer, noop_serialization, noop_deserialization
 
 from toolz import valmap
 
@@ -60,7 +60,6 @@ JSONSerializer = Serializer(
         (str, int, float, bool, type(None)): noop_serialization
     },
     deserialization_functions={
-        dataclass: lambda cls, serialized_obj: dict_to_dataclass(cls, serialized_obj, JSONSerializer.deserialize),
         (dict, list, str, int, float, bool, type(None)): noop_deserialization
     }
 )
@@ -98,7 +97,7 @@ A collection of utilities to make it easier to create serializers.
   Serializer functions take a single parameter, the object to be serialized, and returns a serialized version of it.
   Deserializer functions take two parameters, the desired type of the deserialized object, and the object to be deserialized.
 
-  By default, `Union`s are deserialized using `union_deserialization`, using itself as the nested deserialization function.
+  By default, `dataclass`es are deserialized using `dict_to_dataclass`, and `Union`s using `union_deserialization`, using itself as the nested deserialization function.
 
   Serialize a Python object with `serializer.serialize(obj)`, and deserialize with `serializer.deserialize(cls, serialized_obj)`.
 

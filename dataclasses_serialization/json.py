@@ -4,7 +4,7 @@ import json
 
 from toolz import valmap
 
-from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_to_dataclass, Serializer
+from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, Serializer
 
 __all__ = [
     "JSONSerializer",
@@ -21,7 +21,6 @@ JSONSerializer = Serializer(
         (str, int, float, bool, type(None)): noop_serialization
     },
     deserialization_functions={
-        dataclass: lambda cls, serialized_obj: dict_to_dataclass(cls, serialized_obj, JSONSerializer.deserialize),
         (dict, list, str, int, float, bool, type(None)): noop_deserialization
     }
 )

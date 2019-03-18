@@ -3,7 +3,7 @@ from datetime import datetime
 
 from toolz import valmap
 
-from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_to_dataclass, Serializer
+from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, Serializer
 
 try:
     import bson
@@ -36,7 +36,6 @@ BSONSerializer = Serializer(
         (str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_serialization
     },
     deserialization_functions={
-        dataclass: lambda cls, serialized_obj: dict_to_dataclass(cls, serialized_obj, BSONSerializer.deserialize),
         (dict, list, str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
     }
 )
