@@ -174,7 +174,7 @@ class TestSerializerBase(TestCase):
             self.assertEqual(AnotherDataclass("Hello, world"), dataclass_serializer.deserialize(AnotherDataclass, {'str_field': "Hello, world"}))
 
     def test_serializer_union_deserialization_basic(self):
-        serializer = Serializer({}, {(str, int): noop_deserialization})
+        serializer = Serializer({}, {(str, int): noop_deserialization, dataclass: dict_to_dataclass})
 
         with self.subTest("Deserialize str as part of union"):
             self.assertEqual("Hello, world", serializer.deserialize(Union[str, int], "Hello, world"))
@@ -184,6 +184,16 @@ class TestSerializerBase(TestCase):
 
         with self.subTest("Fail invalid union deserialization"), self.assertRaises(DeserializationError):
             serializer.deserialize(Union[str, int], None)
+
+        with self.subTest("Non-trivial union deserialization"):
+            @dataclass
+            class ExampleDataclass:
+                int_field: int
+
+            self.assertEqual(
+                ExampleDataclass(1),
+                serializer.deserialize(Union[str, ExampleDataclass], {'int_field': 1})
+            )
 
     def test_serializer_union_deserialization_custom(self):
         serializer = Serializer({}, {

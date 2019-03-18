@@ -98,7 +98,7 @@ A collection of utilities to make it easier to create serializers.
   Serializer functions take a single parameter, the object to be serialized, and returns a serialized version of it.
   Deserializer functions take two parameters, the desired type of the deserialized object, and the object to be deserialized.
 
-  By default, `Union`s are deserialized using `union_deserialization`.
+  By default, `Union`s are deserialized using `union_deserialization`, using itself as the nested deserialization function.
 
   Serialize a Python object with `serializer.serialize(obj)`, and deserialize with `serializer.deserialize(cls, serialized_obj)`.
 
