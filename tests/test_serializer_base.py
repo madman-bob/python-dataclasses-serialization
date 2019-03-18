@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Union, Optional
+from typing import Union, Optional, Dict
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
@@ -20,6 +20,10 @@ class TestSerializerBase(TestCase):
         positive_test_cases = [
             (1, int),
             ("Hello, world", str),
+            ({'key': "Value"}, dict),
+            ({'key': "Value"}, Dict),
+            ({'key': "Value"}, Dict[str, str]),
+            ({'key': 1}, Dict[str, int]),
             (ExampleDataclass(1), ExampleDataclass),
             (ExampleDataclass, dataclass)
         ]
@@ -31,6 +35,9 @@ class TestSerializerBase(TestCase):
         negative_test_cases = [
             (1, str),
             ("Hello, world", int),
+            ({'key': "Value"}, Dict[str, int]),
+            ({'key': "Value"}, Dict[int, str]),
+            ({'key': 1}, Dict[str, str]),
             (ExampleDataclass(1), dataclass),
             (ExampleDataclass, ExampleDataclass)
         ]

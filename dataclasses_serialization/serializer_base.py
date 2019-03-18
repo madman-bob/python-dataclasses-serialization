@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Union
+from typing import Union, Dict
 
 from toolz import curry
 
@@ -22,6 +22,16 @@ original_issubclass = issubclass
 def isinstance(o, t):
     if t is dataclass:
         return original_isinstance(o, type) and is_dataclass(o)
+
+    if original_isinstance(t, type(Dict)):
+        if t is Dict:
+            return original_isinstance(o, dict)
+
+        if t.__base__ is Dict:
+            return original_isinstance(o, dict) and all(
+                isinstance(key, t.__args__[0]) and isinstance(value, t.__args__[1])
+                for key, value in o.items()
+            )
 
     return original_isinstance(o, t)
 
