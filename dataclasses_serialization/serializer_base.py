@@ -9,6 +9,7 @@ __all__ = [
     "noop_serialization",
     "noop_deserialization",
     "dict_to_dataclass",
+    "union_deserialization",
     "Serializer",
     "SerializationError",
     "DeserializationError"

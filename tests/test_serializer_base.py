@@ -5,7 +5,7 @@ from unittest import TestCase
 from dataclasses_serialization.serializer_base import (
     isinstance, issubclass,
     noop_serialization, noop_deserialization,
-    dict_to_dataclass,
+    dict_to_dataclass, union_deserialization,
     Serializer,
     SerializationError, DeserializationError
 )
@@ -106,6 +106,22 @@ class TestSerializerBase(TestCase):
                 ExampleDataclass(1),
                 dict_to_dataclass(ExampleDataclass, {'int_field': "1"}, deserialization_func=lambda cls, obj: int(obj))
             )
+
+    def test_union_deserialization_basic(self):
+        with self.subTest("Deserialize union first argument"):
+            self.assertEqual(1, union_deserialization(Union[int, str], 1))
+
+        with self.subTest("Deserialize union second argument"):
+            self.assertEqual(1, union_deserialization(Union[str, int], 1))
+
+        with self.subTest("Deserialize union many arguments"):
+            self.assertEqual(1, union_deserialization(Union[str, list, dict, int, tuple], 1))
+
+        with self.subTest("Invalid union deserialization"), self.assertRaises(DeserializationError):
+            union_deserialization(Union[str, list], 1)
+
+    def test_union_deserialization_deserialization_func(self):
+        self.assertEqual(1, union_deserialization(Union[int, str], "1", deserialization_func=lambda cls, obj: int(obj)))
 
     def test_serializer_serialization_basic(self):
         int_serializer = Serializer({(int, str): int}, {})
