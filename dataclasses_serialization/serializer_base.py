@@ -10,6 +10,8 @@ __all__ = [
     "noop_deserialization",
     "dict_to_dataclass",
     "union_deserialization",
+    "dict_serialization",
+    "dict_deserialization",
     "Serializer",
     "SerializationError",
     "DeserializationError"
@@ -84,6 +86,37 @@ def union_deserialization(type_, obj, deserialization_func=noop_deserialization)
         obj,
         type_
     ))
+
+
+@curry
+def dict_serialization(obj, key_serialization_func=noop_serialization, value_serialization_func=noop_serialization):
+    if not isinstance(obj, dict):
+        raise SerializationError("Cannot serialize {} {!r} using dict serialization".format(
+            type(obj).__name__,
+            obj
+        ))
+
+    return {
+        key_serialization_func(key): value_serialization_func(value)
+        for key, value in obj.items()
+    }
+
+
+@curry
+def dict_deserialization(type_, obj, key_deserialization_func=noop_deserialization, value_deserialization_func=noop_deserialization):
+    if not isinstance(obj, dict):
+        raise DeserializationError("Cannot deserialize {} {!r} using dict deserialization".format(
+            type(obj).__name__,
+            obj
+        ))
+
+    if type_ is dict or type_ is Dict:
+        return obj
+
+    return {
+        key_deserialization_func(type_.__args__[0], key): value_deserialization_func(type_.__args__[1], value)
+        for key, value in obj.items()
+    }
 
 
 @dataclass

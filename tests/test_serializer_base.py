@@ -5,7 +5,7 @@ from unittest import TestCase
 from dataclasses_serialization.serializer_base import (
     isinstance, issubclass,
     noop_serialization, noop_deserialization,
-    dict_to_dataclass, union_deserialization,
+    dict_to_dataclass, union_deserialization, dict_serialization, dict_deserialization,
     Serializer,
     SerializationError, DeserializationError
 )
@@ -129,6 +129,52 @@ class TestSerializerBase(TestCase):
 
     def test_union_deserialization_deserialization_func(self):
         self.assertEqual(1, union_deserialization(Union[int, str], "1", deserialization_func=lambda cls, obj: int(obj)))
+
+    def test_dict_serialization_basic(self):
+        self.assertEqual(
+            {'key': "Value"},
+            dict_serialization({'key': "Value"})
+        )
+
+    def test_dict_serialization_serialization_func(self):
+        with self.subTest("Serialize dict key serialization function"):
+            self.assertEqual(
+                {'0': 1},
+                dict_serialization({0: 1}, key_serialization_func=str)
+            )
+
+        with self.subTest("Serialize dict value serialization function"):
+            self.assertEqual(
+                {0: "1"},
+                dict_serialization({0: 1}, value_serialization_func=str)
+            )
+
+    def test_dict_deserialization_basic(self):
+        with self.subTest("Deserialize dict noop"):
+            self.assertEqual({'key': "Value"}, dict_deserialization(dict, {'key': "Value"}))
+            self.assertEqual({'key': "Value"}, dict_deserialization(Dict, {'key': "Value"}))
+
+        with self.subTest("Deserialize dict"):
+            self.assertEqual({'key': "Value"}, dict_deserialization(Dict[str, str], {'key': "Value"}))
+
+        with self.subTest("Fail invalid key deserialization"), self.assertRaises(DeserializationError):
+            dict_deserialization(Dict[str, str], {0: "Value"})
+
+        with self.subTest("Fail invalid value deserialization"), self.assertRaises(DeserializationError):
+            dict_deserialization(Dict[str, str], {'key': 1})
+
+    def test_dict_deserialization_deserialization_func(self):
+        with self.subTest("Deserialize dict key deserialization function"):
+            self.assertEqual(
+                {'0': 1},
+                dict_deserialization(Dict[str, int], {0: 1}, key_deserialization_func=lambda cls, obj: str(obj))
+            )
+
+        with self.subTest("Deserialize dict value deserialization function"):
+            self.assertEqual(
+                {0: "1"},
+                dict_deserialization(Dict[int, str], {0: 1}, value_deserialization_func=lambda cls, obj: str(obj))
+            )
 
     def test_serializer_serialization_basic(self):
         int_serializer = Serializer({(int, str): int}, {})

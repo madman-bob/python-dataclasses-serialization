@@ -89,6 +89,10 @@ A collection of utilities to make it easier to create serializers.
 
   As `Optional`s are implemented as `Union`s, this function also works for them.
 
+- `dict_serialization(obj, key_serialization_func=noop_serialization, value_serialization_func=noop_serialization)`, `dict_deserialization(type_, obj, key_deserialization_func=noop_deserialization, value_deserialization_func=noop_deserialization)`
+
+  Serialize/deserialize a dictionary `obj` by applying the appropriate serialization/deserialization functions to keys and values.
+
 - `Serializer(serialization_functions, deserialization_functions)`
 
   The general serialization class.
