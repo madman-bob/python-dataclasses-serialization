@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer
+from dataclasses_serialization.serializer_base import isinstance, noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer, DeserializationError
 
 try:
     import bson
@@ -25,6 +25,33 @@ __all__ = [
     "BSONStrSerializerMixin"
 ]
 
+
+def bson_int_deserializer(cls, obj):
+    """
+    Mongo implicitly converts ints to floats
+
+    Attempt to coerce back
+    Fail if coercion lossy
+    """
+
+    if isinstance(obj, cls):
+        return obj
+
+    try:
+        coerced_obj = cls(obj)
+    except:
+        coerced_obj = None
+
+    if coerced_obj == obj:
+        return coerced_obj
+
+    raise DeserializationError("Cannot deserialize {} {!r} to type {}".format(
+        type(obj).__name__,
+        obj,
+        cls.__name__
+    ))
+
+
 BSONSerializer = Serializer(
     serialization_functions={
         dict: lambda dct: dict_serialization(dct, key_serialization_func=BSONSerializer.serialize, value_serialization_func=BSONSerializer.serialize),
@@ -33,7 +60,8 @@ BSONSerializer = Serializer(
     },
     deserialization_functions={
         dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=BSONSerializer.deserialize, value_deserialization_func=BSONSerializer.deserialize),
-        (list, str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
+        int: bson_int_deserializer,
+        (list, str, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
     }
 )
 

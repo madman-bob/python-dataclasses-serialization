@@ -4,6 +4,8 @@ from os import environ
 from typing import Dict
 from unittest import TestCase, skipIf
 
+from dataclasses_serialization.serializer_base import DeserializationError
+
 try:
     import bson
 
@@ -67,6 +69,16 @@ class TestBSON(TestCase):
 
             with self.subTest("Deserialize object", obj=obj):
                 self.assertEqual(obj, BSONSerializer.deserialize(type_, serialized_obj))
+
+    def test_bson_int_coercion(self):
+        with self.subTest("Coerce integer float -> int"):
+            i = BSONSerializer.deserialize(int, 1.0)
+
+            self.assertIsInstance(i, int)
+            self.assertEqual(1, i)
+
+        with self.subTest("Fail to coerce non-integer float -> int"), self.assertRaises(DeserializationError):
+            BSONSerializer.deserialize(int, 1.5)
 
     def test_bson_serialization_nested(self):
         obj = Song(Person("Fred"))
