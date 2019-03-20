@@ -1,8 +1,6 @@
 from datetime import datetime
 
-from toolz import valmap
-
-from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, Serializer
+from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer
 
 try:
     import bson
@@ -29,12 +27,13 @@ __all__ = [
 
 BSONSerializer = Serializer(
     serialization_functions={
-        dict: lambda dct: valmap(BSONSerializer.serialize, dct),
+        dict: lambda dct: dict_serialization(dct, key_serialization_func=BSONSerializer.serialize, value_serialization_func=BSONSerializer.serialize),
         list: lambda lst: list(map(BSONSerializer.serialize, lst)),
         (str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_serialization
     },
     deserialization_functions={
-        (dict, list, str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
+        dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=BSONSerializer.deserialize, value_deserialization_func=BSONSerializer.deserialize),
+        (list, str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
     }
 )
 

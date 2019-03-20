@@ -46,19 +46,18 @@ item = BSONSerializer.deserialize(InventoryItem, collection.find_one())
 To create a custom serializer, create an instance of `dataclasses_serialization.serializer_base.Serializer`:
 
 ```python
-from dataclasses_serialization.serializer_base import Serializer, noop_serialization, noop_deserialization
-
-from toolz import valmap
+from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer
 
 
 JSONSerializer = Serializer(
     serialization_functions={
-        dict: lambda dct: valmap(JSONSerializer.serialize, dct),
+        dict: lambda dct: dict_serialization(dct, key_serialization_func=JSONSerializer.serialize, value_serialization_func=JSONSerializer.serialize),
         list: lambda lst: list(map(JSONSerializer.serialize, lst)),
         (str, int, float, bool, type(None)): noop_serialization
     },
     deserialization_functions={
-        (dict, list, str, int, float, bool, type(None)): noop_deserialization
+        dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=JSONSerializer.deserialize, value_deserialization_func=JSONSerializer.deserialize),
+        (list, str, int, float, bool, type(None)): noop_deserialization
     }
 )
 ```

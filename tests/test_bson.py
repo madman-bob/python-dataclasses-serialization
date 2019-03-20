@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from os import environ
+from typing import Dict
 from unittest import TestCase, skipIf
 
 try:
@@ -53,6 +54,9 @@ class TestBSON(TestCase):
             (bytes, b'Hello, world', b'Hello, world'),
             (bson.ObjectId, bson.ObjectId('0' * 24), bson.ObjectId('0' * 24)),
             (bool, True, True),
+            (dict, {'name': "Fred"}, {'name': "Fred"}),
+            (Dict, {'name': "Fred"}, {'name': "Fred"}),
+            (Dict[str, Person], {'abc123': Person("Fred")}, {'abc123': {'name': "Fred"}}),
             (list, [], []),
             (type(None), None, None)
         ]

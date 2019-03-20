@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Dict
 from unittest import TestCase
 
 from dataclasses_serialization.json import JSONSerializer, JSONSerializerMixin, JSONStrSerializer, JSONStrSerializerMixin
@@ -31,6 +32,9 @@ class TestJSON(TestCase):
             (float, 1.0, 1.0),
             (str, "Fred", "Fred"),
             (bool, True, True),
+            (dict, {'name': "Fred"}, {'name': "Fred"}),
+            (Dict, {'name': "Fred"}, {'name': "Fred"}),
+            (Dict[str, Person], {'abc123': Person("Fred")}, {'abc123': {'name': "Fred"}}),
             (list, [], []),
             (type(None), None, None)
         ]
