@@ -104,6 +104,21 @@ A collection of utilities to make it easier to create serializers.
 
   Serialize a Python object with `serializer.serialize(obj)`, and deserialize with `serializer.deserialize(cls, serialized_obj)`.
 
+  Register more serialization/deserialization functions with `serializer.register_serializer(cls, func)`, `serializer.register_deserializer(cls, func)`, and `serializer.register(cls, serialization_func, deserialization_func)`.
+  They can also be used as decorators like so:
+
+  ```python
+  @serializer.register_serializer(int)
+  def int_serializer(obj):
+      ...
+  ```
+
+  ```python
+  @serializer.register_deserializer(int)
+  def int_deserializer(cls, obj):
+      ...
+  ```
+
 - `SerializationError`, `DeserializationError`
 
   Errors to be raised when serialization/deserialization fails, respectively.

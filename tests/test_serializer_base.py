@@ -289,3 +289,42 @@ class TestSerializerBase(TestCase):
 
         with self.subTest("Fail non-present non-optional deserialization"), self.assertRaises(DeserializationError):
             serializer.deserialize(int, None)
+
+    def test_serializer_serializer_registration(self):
+        serializer = Serializer({}, {})
+
+        with self.subTest("Fail serialization before registration"), self.assertRaises(SerializationError):
+            serializer.serialize(0)
+
+        serializer.register_serializer(int, noop_serialization)
+
+        with self.subTest("Succeed at serialization after registration"):
+            self.assertEqual(0, serializer.serialize(0))
+
+    def test_serializer_deserializer_registration(self):
+        serializer = Serializer({}, {})
+
+        with self.subTest("Fail deserialization before registration"), self.assertRaises(DeserializationError):
+            serializer.deserialize(int, 0)
+
+        serializer.register_deserializer(int, noop_deserialization)
+
+        with self.subTest("Succeed at deserialization after registration"):
+            self.assertEqual(0, serializer.deserialize(int, 0))
+
+    def test_serializer_registration(self):
+        serializer = Serializer({}, {})
+
+        with self.subTest("Fail serialization before registration"), self.assertRaises(SerializationError):
+            serializer.serialize(0)
+
+        with self.subTest("Fail deserialization before registration"), self.assertRaises(DeserializationError):
+            serializer.deserialize(int, "0")
+
+        serializer.register(int, lambda obj: str(obj), lambda cls, obj: cls(obj))
+
+        with self.subTest("Succeed at serialization after registration"):
+            self.assertEqual("0", serializer.serialize(0))
+
+        with self.subTest("Succeed at deserialization after registration"):
+            self.assertEqual(0, serializer.deserialize(int, "0"))
