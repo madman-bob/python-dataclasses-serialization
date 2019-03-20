@@ -1,4 +1,3 @@
-from dataclasses import dataclass, asdict
 from datetime import datetime
 
 from toolz import valmap
@@ -30,7 +29,6 @@ __all__ = [
 
 BSONSerializer = Serializer(
     serialization_functions={
-        dataclass: lambda datacls: BSONSerializer.serialize(asdict(datacls)),
         dict: lambda dct: valmap(BSONSerializer.serialize, dct),
         list: lambda lst: list(map(BSONSerializer.serialize, lst)),
         (str, int, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_serialization

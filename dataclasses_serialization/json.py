@@ -1,5 +1,3 @@
-from dataclasses import dataclass, asdict
-
 import json
 
 from toolz import valmap
@@ -15,7 +13,6 @@ __all__ = [
 
 JSONSerializer = Serializer(
     serialization_functions={
-        dataclass: lambda datacls: JSONSerializer.serialize(asdict(datacls)),
         dict: lambda dct: valmap(JSONSerializer.serialize, dct),
         list: lambda lst: list(map(JSONSerializer.serialize, lst)),
         (str, int, float, bool, type(None)): noop_serialization

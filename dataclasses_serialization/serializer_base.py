@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, fields, asdict, is_dataclass
 from typing import Union, Dict
 
 from toolz import curry
@@ -125,6 +125,8 @@ class Serializer:
     deserialization_functions: dict
 
     def __post_init__(self):
+        self.serialization_functions.setdefault(dataclass, lambda obj: self.serialize(asdict(obj)))
+
         self.deserialization_functions.setdefault(dataclass, dict_to_dataclass(deserialization_func=self.deserialize))
         self.deserialization_functions.setdefault(Union, union_deserialization(deserialization_func=self.deserialize))
 
