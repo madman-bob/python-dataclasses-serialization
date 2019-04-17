@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Union, Optional, Dict
+from typing import TypeVar, Union, Optional, Dict
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
@@ -17,6 +17,8 @@ class TestSerializerBase(TestCase):
         class ExampleDataclass:
             int_field: int
 
+        T = TypeVar('T')
+
         positive_test_cases = [
             (1, int),
             ("Hello, world", str),
@@ -24,6 +26,7 @@ class TestSerializerBase(TestCase):
             ({'key': "Value"}, Dict),
             ({'key': "Value"}, Dict[str, str]),
             ({'key': 1}, Dict[str, int]),
+            ({1: 2}, Dict[T, T][int]),
             (ExampleDataclass(1), ExampleDataclass),
             (ExampleDataclass, dataclass)
         ]
@@ -38,6 +41,7 @@ class TestSerializerBase(TestCase):
             ({'key': "Value"}, Dict[str, int]),
             ({'key': "Value"}, Dict[int, str]),
             ({'key': 1}, Dict[str, str]),
+            ({1: 2}, Dict[T, T][str]),
             (ExampleDataclass(1), dataclass),
             (ExampleDataclass, ExampleDataclass)
         ]
@@ -124,6 +128,12 @@ class TestSerializerBase(TestCase):
         with self.subTest("Deserialize union many arguments"):
             self.assertEqual(1, union_deserialization(Union[str, list, dict, int, tuple], 1))
 
+        with self.subTest("Deserialize generic union"):
+            T = TypeVar('T')
+
+            self.assertEqual(1, union_deserialization(Union[str, T][int], 1))
+            self.assertEqual(1, union_deserialization(Union[T, int][str], 1))
+
         with self.subTest("Invalid union deserialization"), self.assertRaises(DeserializationError):
             union_deserialization(Union[str, list], 1)
 
@@ -150,6 +160,8 @@ class TestSerializerBase(TestCase):
             )
 
     def test_dict_deserialization_basic(self):
+        T = TypeVar('T')
+
         with self.subTest("Deserialize dict noop"):
             self.assertEqual({'key': "Value"}, dict_deserialization(dict, {'key': "Value"}))
             self.assertEqual({'key': "Value"}, dict_deserialization(Dict, {'key': "Value"}))
@@ -157,11 +169,17 @@ class TestSerializerBase(TestCase):
         with self.subTest("Deserialize dict"):
             self.assertEqual({'key': "Value"}, dict_deserialization(Dict[str, str], {'key': "Value"}))
 
+        with self.subTest("Deserialize generic dict"):
+            self.assertEqual({'key': "Value"}, dict_deserialization(Dict[T, T][str], {'key': "Value"}))
+
         with self.subTest("Fail invalid key deserialization"), self.assertRaises(DeserializationError):
             dict_deserialization(Dict[str, str], {0: "Value"})
 
         with self.subTest("Fail invalid value deserialization"), self.assertRaises(DeserializationError):
             dict_deserialization(Dict[str, str], {'key': 1})
+
+        with self.subTest("Fail invalid generic deserialization"), self.assertRaises(DeserializationError):
+            dict_deserialization(Dict[T, str][int], {0: 1})
 
     def test_dict_deserialization_deserialization_func(self):
         with self.subTest("Deserialize dict key deserialization function"):

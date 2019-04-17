@@ -1,5 +1,8 @@
 from dataclasses import dataclass, fields, asdict, is_dataclass
-from typing import Union, Dict
+from functools import partial
+from typing import Union, GenericMeta, Dict
+
+from typing_inspect import get_args
 
 from toolz import curry
 
@@ -17,6 +20,8 @@ __all__ = [
     "DeserializationError"
 ]
 
+get_args = partial(get_args, evaluate=True)
+
 original_isinstance = isinstance
 original_issubclass = issubclass
 
@@ -30,8 +35,10 @@ def isinstance(o, t):
             return original_isinstance(o, dict)
 
         if t.__base__ is Dict:
+            key_type, value_type = get_args(t)
+
             return original_isinstance(o, dict) and all(
-                isinstance(key, t.__args__[0]) and isinstance(value, t.__args__[1])
+                isinstance(key, key_type) and isinstance(value, value_type)
                 for key, value in o.items()
             )
 
@@ -44,6 +51,9 @@ def issubclass(cls, classinfo):
 
     if classinfo is Union or original_isinstance(cls, type(Union)):
         return classinfo is Union and original_isinstance(cls, type(Union))
+
+    if original_isinstance(classinfo, GenericMeta):
+        return original_isinstance(cls, GenericMeta) and classinfo.__args__ is None and cls.__base__ is classinfo
 
     return original_issubclass(cls, classinfo)
 
@@ -75,7 +85,7 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
 
 @curry
 def union_deserialization(type_, obj, deserialization_func=noop_deserialization):
-    for arg in type_.__args__:
+    for arg in get_args(type_):
         try:
             return deserialization_func(arg, obj)
         except DeserializationError:
@@ -113,8 +123,10 @@ def dict_deserialization(type_, obj, key_deserialization_func=noop_deserializati
     if type_ is dict or type_ is Dict:
         return obj
 
+    key_type, value_type = get_args(type_)
+
     return {
-        key_deserialization_func(type_.__args__[0], key): value_deserialization_func(type_.__args__[1], value)
+        key_deserialization_func(key_type, key): value_deserialization_func(value_type, value)
         for key, value in obj.items()
     }
 
