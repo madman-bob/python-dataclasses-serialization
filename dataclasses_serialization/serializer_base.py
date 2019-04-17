@@ -66,9 +66,9 @@ def noop_serialization(obj):
 def noop_deserialization(cls, obj):
     if not isinstance(obj, cls):
         raise DeserializationError("Cannot deserialize {} {!r} to type {}".format(
-            type(obj).__name__,
+            type(obj),
             obj,
-            cls.__name__
+            cls
         ))
 
     return obj
@@ -92,7 +92,7 @@ def union_deserialization(type_, obj, deserialization_func=noop_deserialization)
             pass
 
     raise DeserializationError("Cannot deserialize {} {!r} to type {}".format(
-        type(obj).__name__,
+        type(obj),
         obj,
         type_
     ))
@@ -102,7 +102,7 @@ def union_deserialization(type_, obj, deserialization_func=noop_deserialization)
 def dict_serialization(obj, key_serialization_func=noop_serialization, value_serialization_func=noop_serialization):
     if not isinstance(obj, dict):
         raise SerializationError("Cannot serialize {} {!r} using dict serialization".format(
-            type(obj).__name__,
+            type(obj),
             obj
         ))
 
@@ -116,7 +116,7 @@ def dict_serialization(obj, key_serialization_func=noop_serialization, value_ser
 def dict_deserialization(type_, obj, key_deserialization_func=noop_deserialization, value_deserialization_func=noop_deserialization):
     if not isinstance(obj, dict):
         raise DeserializationError("Cannot deserialize {} {!r} using dict deserialization".format(
-            type(obj).__name__,
+            type(obj),
             obj
         ))
 
@@ -154,7 +154,7 @@ class Serializer:
         if is_dataclass(obj) and dataclass in self.serialization_functions:
             return self.serialization_functions[dataclass](obj)
 
-        raise SerializationError("Cannot serialize type {}".format(type(obj).__name__))
+        raise SerializationError("Cannot serialize type {}".format(type(obj)))
 
     @curry
     def deserialize(self, cls, serialized_obj):
@@ -169,7 +169,7 @@ class Serializer:
         if is_dataclass(cls) and dataclass in self.deserialization_functions:
             return self.deserialization_functions[dataclass](cls, serialized_obj)
 
-        raise DeserializationError("Cannot deserialize type {}".format(cls.__name__))
+        raise DeserializationError("Cannot deserialize type {}".format(cls))
 
     @curry
     def register_serializer(self, cls, func):
