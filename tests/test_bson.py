@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from os import environ
-from typing import Dict
+from typing import Dict, List
 from unittest import TestCase, skipIf
 
 from dataclasses_serialization.serializer_base import DeserializationError
@@ -59,7 +59,9 @@ class TestBSON(TestCase):
             (dict, {'name': "Fred"}, {'name': "Fred"}),
             (Dict, {'name': "Fred"}, {'name': "Fred"}),
             (Dict[str, Person], {'abc123': Person("Fred")}, {'abc123': {'name': "Fred"}}),
-            (list, [], []),
+            (list, [{'name': "Fred"}], [{'name': "Fred"}]),
+            (List, [{'name': "Fred"}], [{'name': "Fred"}]),
+            (List[Person], [Person("Fred")], [{'name': "Fred"}]),
             (type(None), None, None)
         ]
 

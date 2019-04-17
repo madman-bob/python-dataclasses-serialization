@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dataclasses_serialization.serializer_base import isinstance, noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer, DeserializationError
+from dataclasses_serialization.serializer_base import isinstance, noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, list_deserialization, Serializer, DeserializationError
 
 try:
     import bson
@@ -60,8 +60,9 @@ BSONSerializer = Serializer(
     },
     deserialization_functions={
         dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=BSONSerializer.deserialize, value_deserialization_func=BSONSerializer.deserialize),
+        list: lambda cls, lst: list_deserialization(cls, lst, deserialization_func=BSONSerializer.deserialize),
         int: bson_int_deserializer,
-        (list, str, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
+        (str, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
     }
 )
 

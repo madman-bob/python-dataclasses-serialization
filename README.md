@@ -46,7 +46,7 @@ item = BSONSerializer.deserialize(InventoryItem, collection.find_one())
 To create a custom serializer, create an instance of `dataclasses_serialization.serializer_base.Serializer`:
 
 ```python
-from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, Serializer
+from dataclasses_serialization.serializer_base import noop_serialization, noop_deserialization, dict_serialization, dict_deserialization, list_deserialization, Serializer
 
 
 JSONSerializer = Serializer(
@@ -57,7 +57,8 @@ JSONSerializer = Serializer(
     },
     deserialization_functions={
         dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=JSONSerializer.deserialize, value_deserialization_func=JSONSerializer.deserialize),
-        (list, str, int, float, bool, type(None)): noop_deserialization
+        list: lambda cls, lst: list_deserialization(cls, lst, deserialization_func=JSONSerializer.deserialize),
+        (str, int, float, bool, type(None)): noop_deserialization
     }
 )
 ```
@@ -89,6 +90,10 @@ A collection of utilities to make it easier to create serializers.
 - `dict_serialization(obj, key_serialization_func=noop_serialization, value_serialization_func=noop_serialization)`, `dict_deserialization(type_, obj, key_deserialization_func=noop_deserialization, value_deserialization_func=noop_deserialization)`
 
   Serialize/deserialize a dictionary `obj` by applying the appropriate serialization/deserialization functions to keys and values.
+
+- `list_deserialization(type_, obj, deserialization_func=noop_deserialization)`
+
+  Deserialize a list `obj` by applying the deserialization function to its values.
 
 - `Serializer(serialization_functions, deserialization_functions)`
 

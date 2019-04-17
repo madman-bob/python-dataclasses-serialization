@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields, asdict, is_dataclass
 from functools import partial
-from typing import Union, GenericMeta, Dict
+from typing import Union, GenericMeta, Dict, List
 
 from typing_inspect import get_args
 
@@ -15,6 +15,7 @@ __all__ = [
     "union_deserialization",
     "dict_serialization",
     "dict_deserialization",
+    "list_deserialization",
     "Serializer",
     "SerializationError",
     "DeserializationError"
@@ -129,6 +130,25 @@ def dict_deserialization(type_, obj, key_deserialization_func=noop_deserializati
         key_deserialization_func(key_type, key): value_deserialization_func(value_type, value)
         for key, value in obj.items()
     }
+
+
+@curry
+def list_deserialization(type_, obj, deserialization_func=noop_deserialization):
+    if not isinstance(obj, list):
+        raise DeserializationError("Cannot deserialize {} {!r} using list deserialization".format(
+            type(obj),
+            obj
+        ))
+
+    if type_ is list or type_ is List:
+        return obj
+
+    value_type, = get_args(type_)
+
+    return [
+        deserialization_func(value_type, value)
+        for value in obj
+    ]
 
 
 @dataclass
