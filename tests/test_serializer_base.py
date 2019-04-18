@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import TypeVar, Union, Optional, Dict, List
+from typing import Generic, TypeVar, Union, Optional, Dict, List
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
@@ -117,6 +117,73 @@ class TestSerializerBase(TestCase):
                 ExampleDataclass(1),
                 dict_to_dataclass(ExampleDataclass, {'int_field': "1"}, deserialization_func=lambda cls, obj: int(obj))
             )
+
+    def test_dict_to_dataclass_generics(self):
+        T = TypeVar('T')
+
+        @dataclass
+        class ExampleRedundantGenericDataclass(Generic[T]):
+            s: str
+
+        @dataclass
+        class ExampleGenericTypeVarDataclass(Generic[T]):
+            t: T
+
+        @dataclass
+        class ExampleGenericCompoundDataclass(Generic[T]):
+            t_dict: Dict[str, T]
+
+        with self.subTest("Fail generic deserialization"):
+            with self.assertRaises(DeserializationError):
+                dict_to_dataclass(ExampleRedundantGenericDataclass, {'s': "a"})
+
+            with self.assertRaises(DeserializationError):
+                dict_to_dataclass(ExampleGenericTypeVarDataclass, {'t': "a"})
+
+            with self.assertRaises(DeserializationError):
+                dict_to_dataclass(ExampleGenericCompoundDataclass, {'t_dict': {}})
+
+        with self.subTest("Deserialize bound generics"):
+            self.assertEqual(
+                ExampleRedundantGenericDataclass("a"),
+                dict_to_dataclass(ExampleRedundantGenericDataclass[int], {'s': "a"})
+            )
+
+            self.assertEqual(
+                ExampleGenericTypeVarDataclass("a"),
+                dict_to_dataclass(ExampleGenericTypeVarDataclass[str], {'t': "a"})
+            )
+            self.assertEqual(
+                ExampleGenericTypeVarDataclass(1),
+                dict_to_dataclass(ExampleGenericTypeVarDataclass[int], {'t': 1})
+            )
+
+            self.assertEqual(
+                ExampleGenericCompoundDataclass({'a': "b"}),
+                dict_to_dataclass(ExampleGenericCompoundDataclass[str], {'t_dict': {'a': "b"}})
+            )
+            self.assertEqual(
+                ExampleGenericCompoundDataclass({'a': 1}),
+                dict_to_dataclass(ExampleGenericCompoundDataclass[int], {'t_dict': {'a': 1}})
+            )
+
+        with self.subTest("Deserialize indirectly bound generics"):
+            self.assertEqual(
+                ExampleGenericTypeVarDataclass(["a", "b"]),
+                dict_to_dataclass(ExampleGenericTypeVarDataclass[List[T]][str], {'t': ["a", "b"]}, deserialization_func=list_deserialization)
+            )
+
+            self.assertEqual(
+                ExampleGenericCompoundDataclass({'a': ["a", "b"]}),
+                dict_to_dataclass(ExampleGenericCompoundDataclass[List[T]][str], {'t_dict': {'a': ["a", "b"]}}, deserialization_func=dict_deserialization(value_deserialization_func=list_deserialization))
+            )
+
+        with self.subTest("Fail bound generic incorrect type"):
+            with self.assertRaises(DeserializationError):
+                dict_to_dataclass(ExampleGenericTypeVarDataclass[str], {'t': 1})
+
+            with self.assertRaises(DeserializationError):
+                dict_to_dataclass(ExampleGenericCompoundDataclass[str], {'t_dict': {'a': 1}})
 
     def test_union_deserialization_basic(self):
         with self.subTest("Deserialize union first argument"):

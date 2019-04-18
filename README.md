@@ -81,6 +81,9 @@ A collection of utilities to make it easier to create serializers.
 
   The inverse of `dataclasses.asdict`, which deserializes a dictionary `dct` to a dataclass `cls`, using `deserialization_func` to deserialize the fields of `cls`.
 
+  Fields are deserialized using the type provided by the dataclass.
+  So bound generic dataclasses may be deserialized, while unbound ones may not.
+
 - `union_deserialization(type_, obj, deserialization_func=noop_deserialization)`
 
   Deserialize a `Union` `type_`, by trying each type in turn, and returning the first that does not raise a `DeserializationError`.

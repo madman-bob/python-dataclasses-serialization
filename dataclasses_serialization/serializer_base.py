@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields, asdict, is_dataclass
 from functools import partial
-from typing import Union, GenericMeta, Dict, List
+from typing import TypeVar, Union, GenericMeta, Dict, List
 
 from typing_inspect import get_args
 
@@ -77,9 +77,28 @@ def noop_deserialization(cls, obj):
 
 @curry
 def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
+    if isinstance(cls, GenericMeta):
+        if cls.__parameters__:
+            raise DeserializationError("Cannot deserialize unbound generic {}".format(
+                cls
+            ))
+
+        type_mapping = dict(zip(cls.__base__.__parameters__, get_args(cls)))
+
+        fld_types = (
+            fld.type[tuple(type_mapping[type_param] for type_param in fld.type.__parameters__)]
+            if isinstance(fld.type, GenericMeta) else
+            type_mapping[fld.type]
+            if isinstance(fld.type, TypeVar) else
+            fld.type
+            for fld in fields(cls)
+        )
+    else:
+        fld_types = (fld.type for fld in fields(cls))
+
     return cls(**{
-        fld.name: deserialization_func(fld.type, dct[fld.name])
-        for fld in fields(cls)
+        fld.name: deserialization_func(fld_type, dct[fld.name])
+        for fld, fld_type in zip(fields(cls), fld_types)
         if fld.name in dct
     })
 
