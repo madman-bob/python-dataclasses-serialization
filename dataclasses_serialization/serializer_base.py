@@ -1,6 +1,10 @@
 from dataclasses import dataclass, fields, asdict, is_dataclass
 from functools import partial
-from typing import TypeVar, Union, GenericMeta, Dict, List
+from typing import TypeVar, Union, Dict, List
+try:
+    from typing import GenericMeta  # python 3.6
+except ImportError:
+    class GenericMeta(type): pass # python 3.7
 
 from typing_inspect import get_args
 
