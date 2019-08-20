@@ -2,7 +2,7 @@ version: 2
 jobs:
   test-minimal: &test-minimal
     docker:
-      - image: circleci/python:3.6.2
+      - image: circleci/python:3.6
 
     environment:
       OPTIONAL_MODULES: ""
@@ -37,6 +37,18 @@ jobs:
             . venv/bin/activate
             python -m unittest discover
 
+  test-python-3-7:
+    <<: *test-minimal
+
+    docker:
+      - image: circleci/python:3.7
+
+  test-python-3-8:
+    <<: *test-minimal
+
+    docker:
+      - image: circleci/python:3.8-rc
+
   test-py-bson:
     <<: *test-minimal
 
@@ -54,5 +66,7 @@ workflows:
   build:
     jobs:
       - test-minimal
+      - test-python-3-7
+      - test-python-3-8
       - test-py-bson
       - test-pymongo-bson
