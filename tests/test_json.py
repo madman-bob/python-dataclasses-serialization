@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 from unittest import TestCase
 
 from dataclasses_serialization.json import JSONSerializer, JSONSerializerMixin, JSONStrSerializer, JSONStrSerializerMixin
@@ -95,3 +95,25 @@ class TestJSON(TestCase):
 
         with self.subTest("Deserialize JSON string -> dataclass with from_json_str mixin"):
             self.assertEqual(obj, Artist.from_json_str(serialized_obj))
+
+
+    def test_serialise_deserialise_nested_optional_dataclass(self):
+        serializer = JSONSerializer
+
+        dc2 = DC2()
+
+        serialised_value = serializer.serialize(dc2)
+        deserialised_value = serializer.deserialize(DC2, serialised_value)
+
+        self.assertIsNotNone(deserialised_value)
+        self.assertIsNone(deserialised_value.optional_dc1)
+
+
+@dataclass
+class DC1:
+    value: Optional[float] = None
+
+
+@dataclass
+class DC2:
+    optional_dc1: Optional[DC1] = None

@@ -90,6 +90,9 @@ def noop_deserialization(cls, obj):
 
 @curry
 def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
+    if dct is None:
+        raise DeserializationError("Can not deserialize None to dataclass {}".format(cls))
+
     if hasattr(cls, '__parameters__'):
         if cls.__parameters__:
             raise DeserializationError("Cannot deserialize unbound generic {}".format(
