@@ -90,6 +90,13 @@ def noop_deserialization(cls, obj):
 
 @curry
 def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
+    if not isinstance(dct, dict):
+        raise DeserializationError("Cannot deserialize {} {!r} using {}".format(
+            type(dct),
+            dct,
+            dict_to_dataclass
+        ))
+
     if hasattr(cls, '__parameters__'):
         if cls.__parameters__:
             raise DeserializationError("Cannot deserialize unbound generic {}".format(
@@ -112,11 +119,17 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
         flds = fields(cls)
         fld_types = (fld.type for fld in flds)
 
-    return cls(**{
-        fld.name: deserialization_func(fld_type, dct[fld.name])
-        for fld, fld_type in zip(flds, fld_types)
-        if fld.name in dct
-    })
+    try:
+        return cls(**{
+            fld.name: deserialization_func(fld_type, dct[fld.name])
+            for fld, fld_type in zip(flds, fld_types)
+            if fld.name in dct
+        })
+    except TypeError:
+        raise DeserializationError("Missing one or more required fields to deserialize {!r} as {}".format(
+            dct,
+            cls
+        ))
 
 
 @curry

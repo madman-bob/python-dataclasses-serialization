@@ -98,11 +98,25 @@ class TestSerializerBase(TestCase):
         class ExampleDataclass:
             int_field: int
             str_field: str
+            optional_field: str = ""
 
-        self.assertEqual(
-            ExampleDataclass(1, "Hello, world"),
-            dict_to_dataclass(ExampleDataclass, {'int_field': 1, 'str_field': "Hello, world"})
-        )
+        with self.subTest("Deserialize basic dict"):
+            self.assertEqual(
+                ExampleDataclass(1, "Hello, world", "Lorem ipsum"),
+                dict_to_dataclass(ExampleDataclass, {'int_field': 1, 'str_field': "Hello, world", 'optional_field': "Lorem ipsum"})
+            )
+
+        with self.subTest("Fill in optional field"):
+            self.assertEqual(
+                ExampleDataclass(1, "Hello, world"),
+                dict_to_dataclass(ExampleDataclass, {'int_field': 1, 'str_field': "Hello, world"})
+            )
+
+        with self.subTest("Fail missing field deserialization"), self.assertRaises(DeserializationError):
+            dict_to_dataclass(ExampleDataclass, {'int_field': 1})
+
+        with self.subTest("Fail non-dict deserialization"), self.assertRaises(DeserializationError):
+            dict_to_dataclass(ExampleDataclass, 1)
 
     def test_dict_to_dataclass_deserialization_func(self):
         @dataclass
