@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields, asdict, is_dataclass
+from dataclasses import dataclass, fields, is_dataclass
 from functools import partial
 from typing import TypeVar, Union, Dict, List
 
@@ -205,7 +205,7 @@ class Serializer:
     deserialization_functions: dict
 
     def __post_init__(self):
-        self.serialization_functions.setdefault(dataclass, lambda obj: self.serialize(asdict(obj)))
+        self.serialization_functions.setdefault(dataclass, lambda obj: self.serialize(dict(obj.__dict__)))
 
         self.deserialization_functions.setdefault(dataclass, dict_to_dataclass(deserialization_func=self.deserialize))
         self.deserialization_functions.setdefault(Union, union_deserialization(deserialization_func=self.deserialize))
