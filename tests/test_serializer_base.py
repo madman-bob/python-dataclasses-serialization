@@ -366,6 +366,29 @@ class TestSerializerBase(TestCase):
         with self.subTest("Deserialize unknown dataclass"):
             self.assertEqual(AnotherDataclass("Hello, world"), dataclass_serializer.deserialize(AnotherDataclass, {'str_field': "Hello, world"}))
 
+    def test_serializer_unpickleable_dataclass(self):
+        from _thread import LockType
+        from threading import Lock
+
+        locks = [Lock(), Lock()]
+
+        @dataclass
+        class UnpickleableDataclass:
+            lock: LockType
+
+        dataclass_serializer = Serializer({
+            LockType: locks.index,
+            dict: lambda obj: dict_serialization(obj, value_serialization_func=dataclass_serializer.serialize)
+        }, {
+            LockType: lambda cls, lock_index: locks[lock_index]
+        })
+
+        with self.subTest("Serialize unpickleable dataclass"):
+            self.assertEqual({'lock': 0}, dataclass_serializer.serialize(UnpickleableDataclass(locks[0])))
+
+        with self.subTest("Deserialize unpickleable dataclass"):
+            self.assertEqual(UnpickleableDataclass(locks[1]), dataclass_serializer.deserialize(UnpickleableDataclass, {'lock': 1}))
+
     def test_serializer_union_deserialization_basic(self):
         serializer = Serializer({}, {(str, int): noop_deserialization})
 
