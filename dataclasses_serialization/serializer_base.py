@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields, is_dataclass
 from functools import partial
-from typing import TypeVar, Union, Dict, List
+from typing import TypeVar, Union, Dict, List, get_type_hints
 
 from typing_inspect import is_union_type, get_origin, get_args
 
@@ -116,8 +116,9 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
             for fld in flds
         )
     else:
+        type_hints = get_type_hints(cls)
         flds = fields(cls)
-        fld_types = (fld.type for fld in flds)
+        fld_types = (type_hints[fld.name] for fld in flds)
 
     try:
         return cls(**{
