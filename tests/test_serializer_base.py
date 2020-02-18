@@ -1,4 +1,5 @@
 from dataclasses import dataclass, asdict
+from os import environ
 from typing import Generic, TypeVar, Union, Optional, Dict, List
 from unittest import TestCase
 
@@ -9,6 +10,22 @@ from dataclasses_serialization.serializer_base import (
     Serializer,
     SerializationError, DeserializationError
 )
+
+postponed_annotations = bool(
+    environ.get(
+        'POSTPONED_ANNOTATIONS',
+        'annotations' in globals()
+    )
+)
+
+if postponed_annotations:
+    # __future__.annotations require type variables used be in global scope
+    # See PEP 563
+    # > Annotations can only use names present in the module scope
+
+    from _thread import LockType
+
+    T = TypeVar('T')
 
 
 class TestSerializerBase(TestCase):
@@ -133,7 +150,9 @@ class TestSerializerBase(TestCase):
             )
 
     def test_dict_to_dataclass_generics(self):
-        T = TypeVar('T')
+        # Shadowing a non-identical TypeVar of the same name interacts strangely with postponing annotations
+        # So use the one in outer scope (if it exists)
+        T = globals().get('T', TypeVar('T'))
 
         @dataclass
         class ExampleRedundantGenericDataclass(Generic[T]):
