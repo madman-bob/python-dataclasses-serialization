@@ -20,7 +20,7 @@ jobs:
           name: Optionally add __future__.annotations import to basic tests
           command: |
             if [ "${POSTPONED_ANNOTATIONS}" ]; then
-              printf '%s\n%s\n' "from __future__ import annotations" "$(cat tests/test_serializer_base.py)" > tests/test_serializer_base.py
+              printf '%s\n%s\n' "from __future__ import annotations" "$(cat tests/serializer_base/test_dataclasses.py)" > tests/serializer_base/test_dataclasses.py
             fi
 
       - restore_cache:
