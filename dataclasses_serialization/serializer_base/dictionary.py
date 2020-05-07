@@ -12,11 +12,28 @@ from dataclasses_serialization.serializer_base.noop import (
     noop_deserialization,
     noop_serialization,
 )
-from dataclasses_serialization.serializer_base.typing import isinstance
+from dataclasses_serialization.serializer_base.typing import (
+    isinstance,
+    register_generic_isinstance,
+)
 
 __all__ = ["dict_serialization", "dict_deserialization"]
 
 get_args = partial(get_args, evaluate=True)
+
+
+@register_generic_isinstance(dict)
+@register_generic_isinstance(Dict)
+def dict_isinstance(o, t):
+    if t is Dict:
+        return isinstance(o, dict)
+
+    key_type, value_type = get_args(t)
+
+    return isinstance(o, dict) and all(
+        isinstance(key, key_type) and isinstance(value, value_type)
+        for key, value in o.items()
+    )
 
 
 @curry

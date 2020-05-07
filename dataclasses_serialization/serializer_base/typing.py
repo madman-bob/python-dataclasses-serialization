@@ -1,9 +1,9 @@
 from dataclasses import dataclass, fields, is_dataclass
 from functools import partial
-from typing import Dict, TypeVar, Union, get_type_hints
+from typing import TypeVar, get_type_hints
 
 from toolz import curry
-from typing_inspect import get_args, get_origin, is_union_type
+from typing_inspect import get_args, get_origin
 
 try:
     from typing import GenericMeta
@@ -12,29 +12,44 @@ except ImportError:
 
     GenericMeta = (_GenericAlias, _SpecialForm)
 
-__all__ = ["isinstance", "issubclass", "dataclass_field_types"]
+__all__ = [
+    "isinstance",
+    "issubclass",
+    "register_generic_isinstance",
+    "register_generic_issubclass",
+    "dataclass_field_types",
+]
 
 get_args = partial(get_args, evaluate=True)
 
 original_isinstance = isinstance
 original_issubclass = issubclass
 
+isinstance_generic_funcs = {}
+issubclass_generic_funcs = {}
+
+
+@curry
+def register_generic_isinstance(origin, func):
+    isinstance_generic_funcs[origin] = func
+
+    return func
+
+
+@curry
+def register_generic_issubclass(origin, func):
+    issubclass_generic_funcs[origin] = func
+
+    return func
+
 
 def isinstance(o, t):
     if t is dataclass:
         return original_isinstance(o, type) and is_dataclass(o)
 
-    if original_isinstance(t, GenericMeta):
-        if t is Dict:
-            return original_isinstance(o, dict)
-
-        if get_origin(t) in (dict, Dict):
-            key_type, value_type = get_args(t)
-
-            return original_isinstance(o, dict) and all(
-                isinstance(key, key_type) and isinstance(value, value_type)
-                for key, value in o.items()
-            )
+    t_origin = get_origin(t)
+    if t_origin in isinstance_generic_funcs:
+        return isinstance_generic_funcs[t_origin](o, t)
 
     return original_isinstance(o, t)
 
@@ -42,9 +57,6 @@ def isinstance(o, t):
 def issubclass(cls, classinfo):
     if classinfo is dataclass:
         return False
-
-    if classinfo is Union or is_union_type(cls):
-        return classinfo is Union and is_union_type(cls)
 
     if original_isinstance(classinfo, GenericMeta):
         return (
@@ -58,6 +70,13 @@ def issubclass(cls, classinfo):
         if isinstance(origin, GenericMeta):
             origin = origin.__base__
         return origin is classinfo
+
+    classinfo_origin = get_origin(classinfo)
+    if classinfo_origin in issubclass_generic_funcs:
+        return issubclass_generic_funcs[classinfo_origin](cls, classinfo)
+
+    if not original_isinstance(cls, type):
+        return False
 
     return original_issubclass(cls, classinfo)
 
