@@ -61,6 +61,22 @@ class TestDictToDataclass(TestCase):
         ):
             dict_to_dataclass(ExampleDataclass, 1)
 
+    def test_dict_to_dataclass_inheritance(self):
+        @dataclass
+        class ExampleDataclass:
+            int_field: int
+
+        @dataclass
+        class ChildDataclass(ExampleDataclass):
+            str_field: str
+
+        self.assertEqual(
+            ChildDataclass(1, "Hello, world"),
+            dict_to_dataclass(
+                ChildDataclass, {"int_field": 1, "str_field": "Hello, world"}
+            ),
+        )
+
     def test_dict_to_dataclass_deserialization_func(self):
         @dataclass
         class ExampleDataclass:
