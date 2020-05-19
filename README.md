@@ -71,7 +71,7 @@ A collection of utilities to make it easier to create serializers.
 
 - `isinstance(o, t)`, `issubclass(cls, clsinfo)`
 
-  Extended versions of the builtin `isinstance` and `issubclass`, to treat `dataclass` as a metaclass for dataclasses, and to be usable with supported `typing` types.
+  Extended versions of the builtin `isinstance` and `issubclass`, to treat `dataclass` as a superclass for dataclasses, and to be usable with supported `typing` types.
 
 - `noop_serialization(obj)`, `noop_deserialization(cls, obj)`
 

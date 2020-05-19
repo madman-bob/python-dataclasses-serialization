@@ -45,7 +45,7 @@ def register_generic_issubclass(origin, func):
 
 def isinstance(o, t):
     if t is dataclass:
-        return original_isinstance(o, type) and is_dataclass(o)
+        return not original_isinstance(o, type) and is_dataclass(o)
 
     t_origin = get_origin(t)
     if t_origin in isinstance_generic_funcs:
@@ -56,7 +56,10 @@ def isinstance(o, t):
 
 def issubclass(cls, classinfo):
     if classinfo is dataclass:
-        return False
+        return original_isinstance(cls, type) and is_dataclass(cls)
+
+    if cls is dataclass:
+        return issubclass(object, classinfo)
 
     if original_isinstance(classinfo, GenericMeta):
         return (

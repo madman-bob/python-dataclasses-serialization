@@ -22,7 +22,7 @@ class TestTyping(TestCase):
             ({"key": 1}, Dict[str, int]),
             ({1: 2}, Dict[T, T][int]),
             (ExampleDataclass(1), ExampleDataclass),
-            (ExampleDataclass, dataclass),
+            (ExampleDataclass(1), dataclass),
         ]
 
         for obj, type_ in positive_test_cases:
@@ -36,7 +36,7 @@ class TestTyping(TestCase):
             ({"key": "Value"}, Dict[int, str]),
             ({"key": 1}, Dict[str, str]),
             ({1: 2}, Dict[T, T][str]),
-            (ExampleDataclass(1), dataclass),
+            (ExampleDataclass, dataclass),
             (ExampleDataclass, ExampleDataclass),
         ]
 
@@ -56,6 +56,7 @@ class TestTyping(TestCase):
         positive_test_cases = [
             (int, object),
             (AnotherDataclass, ExampleDataclass),
+            (ExampleDataclass, dataclass),
             (Union[str, int], Union),
         ]
 
@@ -66,7 +67,7 @@ class TestTyping(TestCase):
         negative_test_cases = [
             (int, str),
             (int, dataclass),
-            (ExampleDataclass, dataclass),
+            (dataclass, ExampleDataclass),
             (Union, Union[str, int]),
         ]
 

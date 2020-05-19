@@ -1,4 +1,4 @@
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass
 from typing import Union
 
 from toolz import curry
@@ -41,9 +41,6 @@ class Serializer:
             if isinstance(obj, type_):
                 return func(obj)
 
-        if is_dataclass(obj) and dataclass in self.serialization_functions:
-            return self.serialization_functions[dataclass](obj)
-
         raise SerializationError("Cannot serialize type {}".format(type(obj)))
 
     @curry
@@ -55,9 +52,6 @@ class Serializer:
         for type_, func in self.deserialization_functions.items():
             if issubclass(cls, type_):
                 return func(cls, serialized_obj)
-
-        if is_dataclass(cls) and dataclass in self.deserialization_functions:
-            return self.deserialization_functions[dataclass](cls, serialized_obj)
 
         raise DeserializationError("Cannot deserialize type {}".format(cls))
 
