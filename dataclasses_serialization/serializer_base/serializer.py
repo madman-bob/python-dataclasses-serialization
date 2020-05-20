@@ -9,6 +9,7 @@ from dataclasses_serialization.serializer_base.errors import (
     DeserializationError,
     SerializationError,
 )
+from dataclasses_serialization.serializer_base.refinement_dict import RefinementDict
 from dataclasses_serialization.serializer_base.typing import isinstance, issubclass
 from dataclasses_serialization.serializer_base.union import union_deserialization
 
@@ -17,10 +18,17 @@ __all__ = ["Serializer"]
 
 @dataclass
 class Serializer:
-    serialization_functions: dict_serialization
-    deserialization_functions: dict_serialization
+    serialization_functions: RefinementDict
+    deserialization_functions: RefinementDict
 
-    def __post_init__(self):
+    def __init__(self, serialization_functions: dict, deserialization_functions: dict):
+        self.serialization_functions = RefinementDict(
+            serialization_functions, is_subset=issubclass, is_element=isinstance
+        )
+        self.deserialization_functions = RefinementDict(
+            deserialization_functions, is_subset=issubclass, is_element=issubclass
+        )
+
         self.serialization_functions.setdefault(
             dataclass, lambda obj: self.serialize(dict_serialization(obj.__dict__))
         )
@@ -37,11 +45,12 @@ class Serializer:
         Serialize given Python object
         """
 
-        for type_, func in self.serialization_functions.items():
-            if isinstance(obj, type_):
-                return func(obj)
+        try:
+            serialization_func = self.serialization_functions[obj]
+        except KeyError:
+            raise SerializationError("Cannot serialize type {}".format(type(obj)))
 
-        raise SerializationError("Cannot serialize type {}".format(type(obj)))
+        return serialization_func(obj)
 
     @curry
     def deserialize(self, cls, serialized_obj):
@@ -49,11 +58,12 @@ class Serializer:
         Attempt to deserialize serialized object as given type
         """
 
-        for type_, func in self.deserialization_functions.items():
-            if issubclass(cls, type_):
-                return func(cls, serialized_obj)
+        try:
+            deserialization_func = self.deserialization_functions[cls]
+        except KeyError:
+            raise DeserializationError("Cannot deserialize type {}".format(cls))
 
-        raise DeserializationError("Cannot deserialize type {}".format(cls))
+        return deserialization_func(cls, serialized_obj)
 
     @curry
     def register_serializer(self, cls, func):

@@ -106,6 +106,8 @@ A collection of utilities to make it easier to create serializers.
   Serializer functions take a single parameter, the object to be serialized, and returns a serialized version of it.
   Deserializer functions take two parameters, the desired type of the deserialized object, and the object to be deserialized.
 
+  If an object's type cannot be found directly in the serialization/deserialization functions, the `Serializer` uses its closest ancestor - raising an error in case of ambiguity.
+
   By default `dataclass`es are serialized as though they are `dict`s.
   Similarly, `dataclass`es are deserialized using `dict_to_dataclass`, and `Union`s using `union_deserialization`, using itself as the nested deserialization function.
 

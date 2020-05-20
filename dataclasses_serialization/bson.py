@@ -62,7 +62,8 @@ BSONSerializer = Serializer(
         dict: lambda cls, dct: dict_deserialization(cls, dct, key_deserialization_func=BSONSerializer.deserialize, value_deserialization_func=BSONSerializer.deserialize),
         list: lambda cls, lst: list_deserialization(cls, lst, deserialization_func=BSONSerializer.deserialize),
         int: bson_int_deserializer,
-        (str, float, datetime, bytes, bson.ObjectId, bool, type(None)): noop_deserialization
+        bool: noop_deserialization,
+        (str, float, datetime, bytes, bson.ObjectId, type(None)): noop_deserialization
     }
 )
 
