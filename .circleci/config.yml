@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  test-minimal: &test-minimal
+  test-python-3-6: &test-python-3-6
     docker:
       - image: circleci/python:3.6
 
@@ -46,33 +46,33 @@ jobs:
             python -m unittest discover
 
   test-python-3-7:
-    <<: *test-minimal
+    <<: *test-python-3-6
 
     docker:
       - image: circleci/python:3.7
 
   test-python-3-8:
-    <<: *test-minimal
+    <<: *test-python-3-6
 
     docker:
-      - image: circleci/python:3.8-rc
+      - image: circleci/python:3.8
 
   test-py-bson:
-    <<: *test-minimal
+    <<: *test-python-3-6
 
     environment:
       <<: *environment-default
       OPTIONAL_MODULES: bson
 
   test-pymongo-bson:
-    <<: *test-minimal
+    <<: *test-python-3-6
 
     environment:
       <<: *environment-default
       OPTIONAL_MODULES: pymongo
 
   test-postponed-annotations:
-    <<: *test-minimal
+    <<: *test-python-3-6
 
     docker:
       - image: circleci/python:3.7
@@ -81,13 +81,95 @@ jobs:
       <<: *environment-default
       POSTPONED_ANNOTATIONS: 1
 
+  deploy:
+    docker:
+      - image: circleci/python:3.8
+
+    steps:
+      - checkout
+
+      - run:
+          name: Add twine to requirements.txt
+          command: |
+            echo "twine" >> requirements.txt
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: Verify module integrity
+          command: |
+            . venv/bin/activate
+            python pypi_upload/setup.py verify
+
+      - run:
+          name: Initialize .pypirc
+          command: |
+            cat > pypi_upload/.pypirc << EOF
+            [pypi]
+            username: ${PYPI_USERNAME}
+            password: ${PYPI_PASSWORD}
+            EOF
+
+      - run:
+          name: Deploy to PyPI
+          command: |
+            . venv/bin/activate
+            chmod +x pypi_upload/pypi_upload.sh
+            ./pypi_upload/pypi_upload.sh
+
 workflows:
   version: 2
-  build:
+  build-and-deploy:
     jobs:
-      - test-minimal
-      - test-python-3-7
-      - test-python-3-8
-      - test-py-bson
-      - test-pymongo-bson
-      - test-postponed-annotations
+      - test-python-3-6:
+          filters:
+            tags:
+              only: /.*/
+      - test-python-3-7:
+          filters:
+            tags:
+              only: /.*/
+      - test-python-3-8:
+          filters:
+            tags:
+              only: /.*/
+      - test-py-bson:
+          filters:
+            tags:
+              only: /.*/
+      - test-pymongo-bson:
+          filters:
+            tags:
+              only: /.*/
+      - test-postponed-annotations:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - test-python-3-6
+            - test-python-3-7
+            - test-python-3-8
+            - test-py-bson
+            - test-pymongo-bson
+            - test-postponed-annotations
+          context: PyPI
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
