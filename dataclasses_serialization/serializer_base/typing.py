@@ -3,7 +3,7 @@ from functools import partial
 from typing import TypeVar, get_type_hints
 
 from toolz import curry
-from typing_inspect import get_args, get_origin
+from typing_inspect import get_args, get_generic_bases, get_origin
 
 try:
     from typing import GenericMeta
@@ -61,15 +61,14 @@ def issubclass(cls, classinfo):
     if original_isinstance(classinfo, GenericMeta):
         return (
             original_isinstance(cls, GenericMeta)
-            and classinfo.__args__ is None
+            and not get_args(classinfo)
             and get_origin(cls) is classinfo
         )
 
     if original_isinstance(cls, GenericMeta):
         origin = get_origin(cls)
-        if isinstance(origin, GenericMeta):
-            origin = origin.__base__
-        return origin is classinfo
+        bases = get_generic_bases(origin) or (origin,)
+        return classinfo in bases
 
     classinfo_origin = get_origin(classinfo)
     if classinfo_origin in issubclass_generic_funcs:
