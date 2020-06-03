@@ -61,19 +61,14 @@ def issubclass(cls, classinfo):
     if cls is dataclass:
         return issubclass(object, classinfo)
 
-    if original_isinstance(classinfo, GenericMeta):
-        return (
-            original_isinstance(cls, GenericMeta)
-            and not get_args(classinfo)
-            and get_origin(cls) is classinfo
-        )
-
     if original_isinstance(cls, GenericMeta):
         origin = get_origin(cls)
         bases = get_generic_bases(origin) or (origin,)
         return classinfo in bases
 
     classinfo_origin = get_origin(classinfo)
+    if classinfo_origin is None and original_isinstance(classinfo, GenericMeta):
+        classinfo_origin = classinfo
     if classinfo_origin in issubclass_generic_funcs:
         return issubclass_generic_funcs[classinfo_origin](cls, classinfo)
 
