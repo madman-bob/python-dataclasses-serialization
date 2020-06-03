@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, TypeVar, Union
+from typing import Dict, Iterable, TypeVar, Union
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import isinstance, issubclass
@@ -57,6 +57,7 @@ class TestTyping(TestCase):
             (int, object),
             (AnotherDataclass, ExampleDataclass),
             (ExampleDataclass, dataclass),
+            (str, Iterable),
             (Union[str, int], Union),
         ]
 
@@ -68,6 +69,8 @@ class TestTyping(TestCase):
             (int, str),
             (int, dataclass),
             (dataclass, ExampleDataclass),
+            (int, Iterable),
+            (str, Union),
             (Union, Union[str, int]),
         ]
 
