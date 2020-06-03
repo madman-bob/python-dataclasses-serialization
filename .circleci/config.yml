@@ -104,6 +104,11 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
 
+      - run:
+          name: Remove changes to requirements.txt
+          command: |
+            git checkout requirements.txt
+
       - save_cache:
           paths:
             - ./venv
