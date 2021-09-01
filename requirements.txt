@@ -1,4 +1,4 @@
-dataclasses
+dataclasses ; python_version < '3.7'
 more_properties>=1.1.0
 typing_inspect
 toolz
