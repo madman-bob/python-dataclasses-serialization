@@ -24,14 +24,14 @@ def dict_to_dataclass(cls, dct, deserialization_func=noop_deserialization):
     except TypeError:
         raise DeserializationError("Cannot deserialize unbound generic {}".format(cls))
 
+    kwargs = {
+        fld.name: deserialization_func(fld_type, dct[fld.name])
+        for fld, fld_type in fld_types
+        if fld.name in dct
+    }
+
     try:
-        return cls(
-            **{
-                fld.name: deserialization_func(fld_type, dct[fld.name])
-                for fld, fld_type in fld_types
-                if fld.name in dct
-            }
-        )
+        return cls(**kwargs)
     except TypeError:
         raise DeserializationError(
             "Missing one or more required fields to deserialize {!r} as {}".format(

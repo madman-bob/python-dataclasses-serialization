@@ -97,6 +97,13 @@ class TestDictToDataclass(TestCase):
                 ),
             )
 
+        with self.subTest("Invalid deserialization func"), self.assertRaises(TypeError):
+            dict_to_dataclass(
+                ExampleDataclass,
+                {"int_field": "1"},
+                deserialization_func=int,
+            )
+
     def test_dict_to_dataclass_generics(self):
         # Shadowing a non-identical TypeVar of the same name interacts strangely with postponing annotations
         # So use the one in outer scope (if it exists)
