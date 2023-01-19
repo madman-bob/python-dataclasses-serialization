@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from functools import partial
 from operator import le
-from typing import Optional
+from typing import Optional, TypeVar, Generic, Dict, Callable, Any, Mapping, Set, Sequence, Iterable
 
 from more_properties import cached_property
 from toposort import toposort
@@ -13,8 +13,12 @@ class AmbiguousKeyError(KeyError):
     pass
 
 
+KeyType = TypeVar("KeyType")
+ValueType = TypeVar("ValType")
+
+
 @dataclass
-class RefinementDict:
+class RefinementDict(Generic[KeyType, ValueType]):
     """
     A dictionary where the keys are themselves collections
 
@@ -24,14 +28,14 @@ class RefinementDict:
     A KeyError is raised if no such collection is found.
     """
 
-    lookup: dict = field(default_factory=dict)
-    fallback: "Optional[RefinementDict]" = None
+    lookup: Dict[KeyType, ValueType] = field(default_factory=dict)
+    fallback: Optional['RefinementDict'] = None
 
     is_subset: callable = le
-    is_element: callable = lambda elem, st: elem in st
+    is_element: Callable[[KeyType, Any], bool] = lambda elem, st: elem in st
 
     @cached_property
-    def dependencies(self):
+    def dependencies(self) -> Mapping[KeyType, Set[KeyType]]:
         return {
             st: {
                 subst
@@ -46,10 +50,10 @@ class RefinementDict:
         del self.dependency_orders
 
     @partial(cached_property, fdel=lambda self: None)
-    def dependency_orders(self):
+    def dependency_orders(self) -> Iterable[Set[KeyType]]:
         return list(toposort(self.dependencies))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: KeyType) -> ValueType:
         for order in self.dependency_orders:
             ancestors = {st for st in order if self.is_element(key, st)}
 
@@ -64,12 +68,12 @@ class RefinementDict:
 
         raise KeyError(f"{key!r}")
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: KeyType, value: ValueType):
         del self.dependencies
 
         self.lookup[key] = value
 
-    def setdefault(self, key, value):
+    def setdefault(self, key: KeyType, value: ValueType):
         if self.fallback is None:
             self.fallback = RefinementDict(
                 is_subset=self.is_subset, is_element=self.is_element

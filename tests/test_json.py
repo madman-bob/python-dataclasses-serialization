@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Tuple
 from unittest import TestCase
 
 from dataclasses_serialization.json import JSONSerializer, JSONSerializerMixin, JSONStrSerializer, JSONStrSerializerMixin
@@ -37,6 +37,8 @@ class TestJSON(TestCase):
             (Dict[str, Person], {'abc123': Person("Fred")}, {'abc123': {'name': "Fred"}}),
             (list, [{'name': "Fred"}], [{'name': "Fred"}]),
             (List, [{'name': "Fred"}], [{'name': "Fred"}]),
+            (Tuple[int, bool, Person], (3, True, Person("Lucy")), [3, True, {'name': "Lucy"}]),
+            (Tuple[float, ...], (3.5, -2.75, 0.), [3.5, -2.75, 0.]),
             (List[Person], [Person("Fred")], [{'name': "Fred"}]),
             (Union[int, Person], 1, 1),
             (Union[int, Person], Person("Fred"), {'name': "Fred"}),
