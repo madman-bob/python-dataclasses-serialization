@@ -1,15 +1,13 @@
-from typing import Dict, List, TypeVar, Tuple
+from typing import Tuple
 from unittest import TestCase
 
-from dataclasses_serialization.serializer_base import (
-    DeserializationError,
-    list_deserialization,
-)
+from dataclasses_serialization.serializer_base import DeserializationError
 from dataclasses_serialization.serializer_base.tuple import tuple_deserialization
 
 
 class TestTupleSerialization(TestCase):
-    def test_list_deserialization_basic(self):
+
+    def test_tuple_deserialization(self):
 
         with self.subTest("Deserialize tuple noop"):
             self.assertEqual((1, 2), tuple_deserialization(tuple, (1, 2)))
