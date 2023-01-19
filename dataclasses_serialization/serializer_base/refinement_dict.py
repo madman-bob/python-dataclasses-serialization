@@ -31,7 +31,7 @@ class RefinementDict(Generic[KeyType, ValueType]):
     lookup: Dict[KeyType, ValueType] = field(default_factory=dict)
     fallback: Optional['RefinementDict[KeyType, ValueType]'] = None
     is_subset: Callable[[KeyType, KeyType], bool] = le
-    is_element: Callable[[KeyType, KeyType], bool] = lambda elem, st: elem in st
+    is_element: Callable[[KeyType, Set[KeyType]], bool] = lambda elem, st: elem in st
 
     @cached_property
     def dependencies(self) -> Mapping[KeyType, Set[KeyType]]:
