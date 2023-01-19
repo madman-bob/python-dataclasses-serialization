@@ -18,12 +18,9 @@ __all__ = ["Serializer"]
 
 DataType = TypeVar("DataType")
 SerializedType = TypeVar("SerializedType")
-
-
 TypeType = Union[type, type(dataclass), type(Any), type(List)]
 # TypeType is the type of a type.  Note that type(Any) resolves to typing._SpecialForm, type(List) resolves to typing._GenericAlias
 # ... These may change in future versions of python so we leave it as is.
-
 TypeOrTypeTuple = Union[TypeType, Tuple[TypeType, ...]]
 
 
