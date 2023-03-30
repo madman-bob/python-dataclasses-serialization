@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, Dict, List, Tuple
+from typing import Union, Dict, List, Tuple, Optional
 from unittest import TestCase
 
 from dataclasses_serialization.json import JSONSerializer, JSONSerializerMixin, JSONStrSerializer, JSONStrSerializerMixin
@@ -27,6 +27,7 @@ class TestJSON(TestCase):
             self.assertEqual(obj, JSONSerializer.deserialize(Person, serialized_obj))
 
     def test_json_serialization_types(self):
+        """ Each tuple in test_cases is of the form (type, obj, serialized_obj)"""
         test_cases = [
             (int, 1, 1),
             (float, 1.0, 1.0),
@@ -43,7 +44,9 @@ class TestJSON(TestCase):
             (Union[int, Person], 1, 1),
             (Union[int, Person], Person("Fred"), {'name': "Fred"}),
             (Union[Song, Person], Person("Fred"), {'name': "Fred"}),
-            (type(None), None, None)
+            (type(None), None, None),
+            (Optional[Tuple[float, float]], None, None),
+            (Optional[Tuple[float, float]], (0.5, -0.75), [0.5, -0.75]),
         ]
 
         for type_, obj, serialized_obj in test_cases:

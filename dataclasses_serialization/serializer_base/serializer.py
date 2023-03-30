@@ -116,3 +116,13 @@ class Serializer(Generic[DataType, SerializedType]):
                  deserialization_func: Callable[[TypeType, SerializedType], DataType]):
         self.register_serializer(cls, serialization_func)
         self.register_deserializer(cls, deserialization_func)
+
+    def add_custom_handling(self,
+                            serializers: Mapping[TypeOrTypeTuple, Callable[[DataType], SerializedType]],
+                            deserializers: Mapping[TypeOrTypeTuple, Callable[[TypeType, SerializedType], DataType]]
+                            ) -> 'Serializer':
+
+        return Serializer(
+            serialization_functions={**self.serialization_functions.lookup, **serializers},
+            deserialization_functions={**self.deserialization_functions.lookup, **deserializers}
+        )
