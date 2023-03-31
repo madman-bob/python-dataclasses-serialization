@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from typing import Optional, Union
+from typing import Optional, Union, List
 from unittest import TestCase
 
 from dataclasses_serialization.serializer_base import (
@@ -234,3 +234,47 @@ class TestSerializer(TestCase):
 
         with self.subTest("Succeed at deserialization after registration"):
             self.assertEqual(0, serializer.deserialize(int, "0"))
+
+    def test_simple_custom_serializer(self):
+
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        point_to_string = Serializer[Point, str](
+            serialization_functions={Point: lambda p: f"{p.x},{p.y}"},
+            deserialization_functions={Point: lambda cls, serialized: Point(*(float(s) for s in serialized.split(',')))}
+        )
+        serialized = point_to_string.serialize(Point(1.5, 2.5))
+        assert serialized == '1.5,2.5'
+        assert point_to_string.deserialize(Point, serialized) == Point(1.5, 2.5)
+
+    def test_nested_custom_serializer_example(self):
+
+        @dataclass
+        class Point:
+            x: float
+            y: float
+            label: str
+
+        def str_to_point(string: str) -> Point:
+            x_str, y_str, lab_str = string.split(',')
+            return Point(float(x_str), float(y_str), lab_str)
+
+        point_to_csv_serializer = Serializer[List[Point], str](
+            serialization_functions={
+                Point: lambda p: f"{p.x},{p.y},{p.label}",
+                list: lambda l: '\n'.join(point_to_csv_serializer.serialize(item) for item in l)
+            },
+            deserialization_functions={
+                Point: lambda cls, serialized: str_to_point(serialized),
+                list: lambda cls, ser: list(point_to_csv_serializer.deserialize(Point, substring) for substring in ser.split('\n'))
+            },
+        )
+        points = [Point(2.5, 3.5, 'point_A'), Point(-1.5, 0.0, 'point_B')]
+        ser_point = point_to_csv_serializer.serialize(points)
+        assert ser_point == '2.5,3.5,point_A\n-1.5,0.0,point_B'
+        recon_points = point_to_csv_serializer.deserialize(List[Point], ser_point)
+        print(recon_points)
+        assert points == recon_points, f"Point {points} did not equal recon point {recon_points}"
